@@ -16,7 +16,11 @@ async def start_handler(message: types.Message):
     name = message.from_user.first_name
     if message.from_user.id not in list_id:
         list_id.append(message.from_user.id)
-    await message.answer(f"Hello {name}, our bot is serving {len(list_id)}, people")
+    await message.answer(f"Hello {name},\nour bot is serving {len(list_id)}, people "
+                         f"\nMy commands:"
+                         f"\n/start - start working with bot"
+                         f"\n/random - random name"
+                         f"\n/myinfo - information of user")
 
 
 @dp.message(Command("myinfo"))
