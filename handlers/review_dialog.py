@@ -1,3 +1,5 @@
+# from mailcap import lineno_sort_key
+from datetime import datetime
 from aiogram import Router, types, F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -11,6 +13,7 @@ class RestourantReview(StatesGroup):
     name = State()
     instagram_username = State()
     food_rating = State()
+    visit_date = State()
     cleanliness_rating = State()
     extra_comments = State()
 
@@ -24,13 +27,24 @@ async def start(callback: types.CallbackQuery, state: FSMContext):
 
 @otzyv_router.message(RestourantReview.name)
 async def ask_instagram(message: types.Message, state: FSMContext):
+    name = message.text
+    if len(name) > 20 or len(name) < 3:
+        await message.answer("Введите коректное имя")
+        return
     await state.update_data(name=message.text)
     await message.answer(f"{message.text}, Какой ваш Instagram аккаунт?")
+    await state.set_state(RestourantReview.visit_date)
+
+@otzyv_router.message(RestourantReview.visit_date)
+async def ask_visit_date(message: types.Message, state: FSMContext):
+    await state.update_data(instagram_username=message.text)
+    await message.answer(f"когда вы посещали наше заведение?")
     await state.set_state(RestourantReview.instagram_username)
 
+date_format = "%d-%m-%Y"
 @otzyv_router.message(RestourantReview.instagram_username)
 async def ask_food_rating(message: types.Message, state: FSMContext):
-    await state.update_data(instagram_username=message.text)
+    await state.update_data(visit_date=message.text)
 
     kb = types.InlineKeyboardMarkup(
         inline_keyboard=[
@@ -107,6 +121,7 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Спасибо за ваш отзыв!\n"
         f"Имя: {data['name']}\n"
         f"Instagram: {data['instagram_username']}\n"
+        f"Дата посещения: {data['visit_date']}\n"
         f"Оценка качества еды: {data['food_rating']}\n"
         f"Оценка чистоты: {data['cleanliness_rating']}\n"
         f"Дополнительные комментарии: {message.text}"
