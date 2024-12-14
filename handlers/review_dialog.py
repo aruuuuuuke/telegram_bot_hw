@@ -1,5 +1,4 @@
 # from mailcap import lineno_sort_key
-from datetime import datetime
 from aiogram import Router, types, F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -41,7 +40,6 @@ async def ask_visit_date(message: types.Message, state: FSMContext):
     await message.answer(f"когда вы посещали наше заведение?")
     await state.set_state(RestourantReview.instagram_username)
 
-date_format = "%d-%m-%Y"
 @otzyv_router.message(RestourantReview.instagram_username)
 async def ask_food_rating(message: types.Message, state: FSMContext):
     await state.update_data(visit_date=message.text)
@@ -61,7 +59,7 @@ async def ask_food_rating(message: types.Message, state: FSMContext):
     await state.set_state(RestourantReview.food_rating)
 
 
-@otzyv_router.callback_query(F.data.startswith("rating_"))
+@otzyv_router.callback_query(RestourantReview.food_rating)
 async def ask_cleanliness_rating(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(food_rating = callback.data)
 
@@ -79,7 +77,7 @@ async def ask_cleanliness_rating(callback: types.CallbackQuery, state: FSMContex
     await callback.message.answer("Как оцениваете чистоту помещения?", reply_markup=kb)
     await state.set_state(RestourantReview.cleanliness_rating)
 
-@otzyv_router.callback_query(F.data.startswith("cleanliness_"))
+@otzyv_router.callback_query(RestourantReview.cleanliness_rating)
 async def ask_extra_comments(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(cleanliness_rating=callback.data)
 
