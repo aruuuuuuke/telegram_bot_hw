@@ -1,7 +1,7 @@
-# from mailcap import lineno_sort_key
 from aiogram import Router, types, F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from bot_config import database
 
 list_user=[]
 
@@ -42,54 +42,55 @@ async def ask_visit_date(message: types.Message, state: FSMContext):
 
 @otzyv_router.message(RestourantReview.instagram_username)
 async def ask_food_rating(message: types.Message, state: FSMContext):
-    await state.update_data(visit_date=message.text)
-
-    kb = types.InlineKeyboardMarkup(
-        inline_keyboard=[
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
             [
-                types.InlineKeyboardButton(text="1", callback_data="rating_1"),
-                types.InlineKeyboardButton(text="2", callback_data="rating_2"),
-                types.InlineKeyboardButton(text="3", callback_data="rating_3"),
-                types.InlineKeyboardButton(text="4", callback_data="rating_4"),
-                types.InlineKeyboardButton(text="5", callback_data="rating_5"),
-            ]
-        ]
+                types.KeyboardButton(text="1"),
+                types.KeyboardButton(text="2"),
+                types.KeyboardButton(text="3"),
+                types.KeyboardButton(text="4"),
+                types.KeyboardButton(text="5"),
+            ],
+        ],
+        resize_keyboard = True,
+        input_field_placeholder = "Оцените еду"
     )
+    await state.update_data(visit_date=message.text)
     await message.answer("Как оцениваете качество еды?", reply_markup=kb)
     await state.set_state(RestourantReview.food_rating)
 
 
-@otzyv_router.callback_query(RestourantReview.food_rating)
-async def ask_cleanliness_rating(callback: types.CallbackQuery, state: FSMContext):
-    await state.update_data(food_rating = callback.data)
-
-    kb = types.InlineKeyboardMarkup(
-         inline_keyboard=[
-             [
-                 types.InlineKeyboardButton(text="1", callback_data="cleanliness_1"),
-                 types.InlineKeyboardButton(text="2", callback_data="cleanliness_2"),
-                 types.InlineKeyboardButton(text="3", callback_data="cleanliness_3"),
-                 types.InlineKeyboardButton(text="4", callback_data="cleanliness_4"),
-                 types.InlineKeyboardButton(text="5", callback_data="cleanliness_5"),
-             ]
-         ]
-     )
-    await callback.message.answer("Как оцениваете чистоту помещения?", reply_markup=kb)
+@otzyv_router.message(RestourantReview.food_rating)
+async def ask_cleanliness_rating(message: types.Message, state: FSMContext):
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                types.KeyboardButton(text="1"),
+                types.KeyboardButton(text="2"),
+                types.KeyboardButton(text="3"),
+                types.KeyboardButton(text="4"),
+                types.KeyboardButton(text="5"),
+            ],
+        ],
+        resize_keyboard = True,
+        input_field_placeholder = "Оцените чистоту"
+    )
+    await state.update_data(food_rating = message.text)
+    await message.answer("Как оцениваете чистоту помещения?", reply_markup=kb)
     await state.set_state(RestourantReview.cleanliness_rating)
 
-@otzyv_router.callback_query(RestourantReview.cleanliness_rating)
-async def ask_extra_comments(callback: types.CallbackQuery, state: FSMContext):
-    await state.update_data(cleanliness_rating=callback.data)
-
+@otzyv_router.message(RestourantReview.cleanliness_rating)
+async def ask_extra_comments(message: types.Message, state: FSMContext):
+    await state.update_data(cleanliness_rating=message.text)
     kb = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 types.InlineKeyboardButton(text="Да", callback_data="yes"),
                 types.InlineKeyboardButton(text="Нет", callback_data="no")
-            ]
+            ],
         ]
     )
-    await callback.message.answer("Есть ли у вас дополнительные комментарии или жалобы?", reply_markup=kb)
+    await message.answer("Есть ли у вас дополнительные комментарии или жалобы?", reply_markup = kb)
     await state.set_state(RestourantReview.extra_comments)
 
 @otzyv_router.callback_query(F.data == "yes")
@@ -126,6 +127,6 @@ async def finish_review(message: types.Message, state: FSMContext):
     )
     await message.answer(review)
     print(data)
+    database.save_survey(data)
     await state.clear()
 
-    #chek
