@@ -15,6 +15,8 @@ class RestourantReview(StatesGroup):
     visit_date = State()
     cleanliness_rating = State()
     extra_comments = State()
+    confirm = State()
+
 
 @otzyv_router.callback_query(F.data == "review")
 async def start(callback: types.CallbackQuery, state: FSMContext):
@@ -62,6 +64,14 @@ async def ask_food_rating(message: types.Message, state: FSMContext):
 
 @otzyv_router.message(RestourantReview.food_rating)
 async def ask_cleanliness_rating(message: types.Message, state: FSMContext):
+    food = message.text
+    if not food.isdigit():
+        await message.answer("Пожалуйста введите числовое значение")
+        return
+    food = int(food)
+    if food < 1 or food > 5:
+        await message.answer("Введите рейтинг от 1 до 5")
+        return
     kb = types.ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -81,6 +91,14 @@ async def ask_cleanliness_rating(message: types.Message, state: FSMContext):
 
 @otzyv_router.message(RestourantReview.cleanliness_rating)
 async def ask_extra_comments(message: types.Message, state: FSMContext):
+    clean = message.text
+    if not clean.isdigit():
+        await message.answer("Пожалуйста введите числовое значение")
+        return
+    clean = int(clean)
+    if clean < 1 or clean > 5:
+        await message.answer("Введите рейтинг от 1 до 5")
+        return
     await state.update_data(cleanliness_rating=message.text)
     kb = types.InlineKeyboardMarkup(
         inline_keyboard=[
@@ -91,15 +109,16 @@ async def ask_extra_comments(message: types.Message, state: FSMContext):
         ]
     )
     await message.answer("Есть ли у вас дополнительные комментарии или жалобы?", reply_markup = kb)
+    list_user.append(message.from_user.id)
     await state.set_state(RestourantReview.extra_comments)
 
-@otzyv_router.callback_query(F.data == "yes")
+@otzyv_router.callback_query(RestourantReview.extra_comments, F.data == "yes")
 async def ask_for_comment(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Пожалуйста, оставьте ваш комментарий.")
     await state.set_state(RestourantReview.extra_comments)
 
 
-@otzyv_router.callback_query(F.data == "no")
+@otzyv_router.callback_query(RestourantReview.extra_comments ,F.data == "no")
 async def skip_comment(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     review = (
@@ -110,7 +129,19 @@ async def skip_comment(callback: types.CallbackQuery, state: FSMContext):
         f"Оценка чистоты: {data['cleanliness_rating']}\n"
         f"Дополнительные комментарии: Нет комментариев"
     )
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                types.KeyboardButton(text="да"),
+                types.KeyboardButton(text="нет"),
+            ],
+        ],
+    )
+    await state.set_state(RestourantReview.confirm)
+    await callback.message.answer("Хотите ли вы сохранить отзыв?", reply_markup=kb)
     await callback.message.answer(review)
+    await state.set_state(RestourantReview.confirm)
+
 
 @otzyv_router.message(RestourantReview.extra_comments)
 async def finish_review(message: types.Message, state: FSMContext):
@@ -125,8 +156,28 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Оценка чистоты: {data['cleanliness_rating']}\n"
         f"Дополнительные комментарии: {message.text}"
     )
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                types.KeyboardButton(text="да"),
+                types.KeyboardButton(text="нет"),
+            ],
+        ],
+    )
     await message.answer(review)
-    print(data)
-    database.save_survey(data)
-    await state.clear()
+    await message.answer("Хотите ли вы сохранить отзыв?", reply_markup=kb)
+    await state.set_state(RestourantReview.confirm)
+
+@otzyv_router.message(RestourantReview.confirm)
+async def save_review(message: types.Message, state: FSMContext):
+    if message.text == "да":
+        data = await state.get_data()
+        print(data)
+        database.save_survey(data)
+        await message.answer("Отзыв сохранено")
+        await state.clear()
+    else:
+        await state.clear()
+
+
 

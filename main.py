@@ -18,6 +18,9 @@ async def main():
     dp.include_router(menu_router)
     dp.include_router(random_meal_router)
     dp.include_router(echo_handlr)
+
+    dp.startup.register(on_startup)
+
     await dp.start_polling(bot)
 
 if __name__ == '__main__':

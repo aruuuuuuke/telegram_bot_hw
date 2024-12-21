@@ -2,7 +2,7 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from bot_config import dp
+from bot_config import database
 
 admin_router = Router()
 admin_router.message.filter(F.from_user.id == 5553751043)
@@ -58,16 +58,16 @@ async def set_cotegory(message: types.Message, state: FSMContext):
     await state.set_state(Meal.category)
 
 @admin_router.message(Meal.category)
-# async def ser_photo(message: types.Message, state: FSMContext):
-#     await state.update_data(category=message.text)
-#     await message.answer("Отправьте фото вашего блюда")
-#     await state.set_state(Meal.receipt)
 async def create_new_book(message: types.Message, state: FSMContext):
     await state.update_data(category=message.text)
     data = await state.get_data()
     print(data)
-    # dp.save_book(data)
+    database.save_meal(data)
     await message.answer("Блюдо сохранено")
     await state.clear()
 
+# async def ser_photo(message: types.Message, state: FSMContext):
+#     await state.update_data(category=message.text)
+#     await message.answer("Отправьте фото вашего блюда")
+#     await state.set_state(Meal.receipt)
 
