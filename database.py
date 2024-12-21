@@ -48,3 +48,21 @@ class Database:
                 (data['name'], data['price'], data['reciept'], data['category'])
             )
             conn.commit()
+
+    def get_all_meals(self):
+        with sqlite3.connect(self.path) as conn:
+            result = conn.execute("SELECT * FROM meals")
+            result.row_factory = sqlite3.Row
+            data = result.fetchall()
+            return [dict(row) for row in data]
+
+    def get_meals_by_price(self):
+        with sqlite3.connect(self.path) as conn:
+            conn.row_factory = sqlite3.Row  # Устанавливаем row_factory для подключения
+            result = conn.execute("""
+            SELECT * FROM meals
+            ORDER BY price ASC;
+            """)
+            data = result.fetchall()
+            return [dict(row) for row in data]
+
