@@ -1,8 +1,12 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
+from aiogram.types import ContentType
+from aiogram import Router, types, F
+from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from bot_config import database
+from pprint import pprint
 
 admin_router = Router()
 admin_router.message.filter(F.from_user.id == 5553751043)
@@ -12,9 +16,9 @@ admin_router.callback_query.filter(F.from_user.id == 5553751043)
 class Meal(StatesGroup):
     name = State()
     price = State()
+    photo = State()
     receipt = State()
     category = State()
-    # photo = State()
 
 
 @admin_router.message(Command("new_meal"))
@@ -29,10 +33,20 @@ async def price_meal(message: types.Message, state: FSMContext):
     await message.answer("Введите цену блюда")
     await state.set_state(Meal.price)
 
-
 @admin_router.message(Meal.price)
-async def ser_reciept(message: types.Message, state: FSMContext):
+async def meal_photo(message: types.Message, state: FSMContext):
     await state.update_data(price=message.text)
+    await message.answer("Загрузите фото блюда")
+    await state.set_state(Meal.photo)
+
+
+@admin_router.message(Meal.photo)
+async def set_reciept(message: types.Message, state: FSMContext):
+    meal_photo = message.photo
+    pprint(meal_photo)
+    biggest_image = meal_photo[-1]
+    biggest_image_id = biggest_image.file_id
+    await state.update_data(photo=biggest_image_id)
     await message.answer("Введиет рецепт/описание блюда")
     await state.set_state(Meal.receipt)
 
@@ -66,8 +80,4 @@ async def create_new_book(message: types.Message, state: FSMContext):
     await message.answer("Блюдо сохранено")
     await state.clear()
 
-# async def ser_photo(message: types.Message, state: FSMContext):
-#     await state.update_data(category=message.text)
-#     await message.answer("Отправьте фото вашего блюда")
-#     await state.set_state(Meal.receipt)
 

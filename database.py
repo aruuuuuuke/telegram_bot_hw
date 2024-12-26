@@ -20,7 +20,8 @@ class Database:
                 CREATE TABLE IF NOT EXISTS meals(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                price INTEGER NOT NULL,
+                price FLOAT NOT NULL,
+                photo TEXT NOT NULL,
                 receipt TEXT NOT NULL,
                 category TEXT NOT NULL
                 )
@@ -42,10 +43,10 @@ class Database:
         with sqlite3.connect(self.path) as conn:
             conn.execute(
                 """
-                INSERT INTO meals(name, price, receipt, category)
-                VALUES (?,?,?,?)
+                INSERT INTO meals(name, price, photo, receipt, category)
+                VALUES (?,?,?,?,?)
                 """,
-                (data['name'], data['price'], data['reciept'], data['category'])
+                (data['name'], data['price'],data['photo'],data['reciept'], data['category'])
             )
             conn.commit()
 
