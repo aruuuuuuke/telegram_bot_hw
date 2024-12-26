@@ -1,7 +1,8 @@
 from aiogram import Router, types, F
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.context import FSMContext
 from bot_config import database
+from aiogram.filters import Command
 
 list_user=[]
 
@@ -17,8 +18,15 @@ class RestourantReview(StatesGroup):
     extra_comments = State()
     confirm = State()
 
+@otzyv_router.message(Command("stop"))
+@otzyv_router.message(F.text == "стоп")
+async def stop(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Опрос отсановлен")
 
-@otzyv_router.callback_query(F.data == "review")
+
+
+@otzyv_router.callback_query(F.data == "review", default_state)
 async def start(callback: types.CallbackQuery, state: FSMContext):
     if callback.from_user.id in list_user:
         await callback.message.answer("Вы уже оставляли отзыв")

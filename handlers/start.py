@@ -1,7 +1,6 @@
 from aiogram.filters import Command
 from aiogram import Router, types, F
 
-from handlers.random_meal import dishes
 
 start_router = Router()
 
@@ -17,7 +16,7 @@ async def start_handler(message: types.Message):
             [types.InlineKeyboardButton(text = "Оставить отзыв", callback_data = "review")]
         ]
     )
-    await message.answer(f"Hello {name},\nThere are {len(dishes)}, dishes in our cafe "
+    await message.answer(f"Hello {name},"
                          f"\nMy commands:"
                          f"\n/start - start working with bot"
                          f"\n/random_meal - random meal"

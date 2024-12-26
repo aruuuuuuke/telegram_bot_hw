@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import ContentType
 from aiogram import Router, types, F
 from aiogram.filters import Command
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.context import FSMContext
 from bot_config import database
 from pprint import pprint
@@ -21,7 +21,14 @@ class Meal(StatesGroup):
     category = State()
 
 
-@admin_router.message(Command("new_meal"))
+
+@admin_router.message(Command("stop"))
+@admin_router.message(F.text == "стоп")
+async def stop(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Опрос отсановлен")
+
+@admin_router.message(Command("new_meal"), default_state)
 async def name_meal(message: types.Message, state: FSMContext):
     await message.answer("Введите название блюда")
     await state.set_state(Meal.name)
