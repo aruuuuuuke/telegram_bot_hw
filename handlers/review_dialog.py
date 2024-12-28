@@ -12,8 +12,8 @@ otzyv_router = Router()
 class RestourantReview(StatesGroup):
     name = State()
     instagram_username = State()
-    food_rating = State()
     visit_date = State()
+    food_rating = State()
     cleanliness_rating = State()
     extra_comments = State()
     confirm = State()
@@ -23,7 +23,6 @@ class RestourantReview(StatesGroup):
 async def stop(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("Опрос отсановлен")
-
 
 
 @otzyv_router.callback_query(F.data == "review", default_state)
@@ -42,16 +41,26 @@ async def ask_instagram(message: types.Message, state: FSMContext):
         return
     await state.update_data(name=message.text)
     await message.answer(f"{message.text}, Какой ваш Instagram аккаунт?")
-    await state.set_state(RestourantReview.visit_date)
-
-@otzyv_router.message(RestourantReview.visit_date)
-async def ask_visit_date(message: types.Message, state: FSMContext):
-    await state.update_data(instagram_username=message.text)
-    await message.answer(f"когда вы посещали наше заведение?")
     await state.set_state(RestourantReview.instagram_username)
 
 @otzyv_router.message(RestourantReview.instagram_username)
+async def ask_visit_date(message: types.Message, state: FSMContext):
+    await state.update_data(instagram_username=message.text)
+    await message.answer(f"когда вы посещали наше заведение(гггг-мм-дд)?")
+    await state.set_state(RestourantReview.visit_date)
+
+
+@otzyv_router.message(RestourantReview.visit_date)
 async def ask_food_rating(message: types.Message, state: FSMContext):
+    visit_date = message.text
+    if (
+            len(visit_date) != 10 or
+            not (visit_date[:4].isdigit() and visit_date[5:7].isdigit() and visit_date[8:].isdigit()) or
+            visit_date[4] != "-" or visit_date[7] != "-"
+    ):
+        await message.answer("Введите корректную дату в формате YYYY-MM-DD, например, 2024-12-31.")
+        return
+    await state.update_data(visit_date=visit_date)
     kb = types.ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -62,10 +71,9 @@ async def ask_food_rating(message: types.Message, state: FSMContext):
                 types.KeyboardButton(text="5"),
             ],
         ],
-        resize_keyboard = True,
-        input_field_placeholder = "Оцените еду"
+        resize_keyboard=True,
+        input_field_placeholder="Оцените еду"
     )
-    await state.update_data(visit_date=message.text)
     await message.answer("Как оцениваете качество еды?", reply_markup=kb)
     await state.set_state(RestourantReview.food_rating)
 

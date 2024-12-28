@@ -13,7 +13,7 @@ class Database:
                 instagram_username TEXT NOT NULL,
                 food_rating INTEGER NOT NULL,
                 cleanliness_rating INTEGER NOT NULL,
-                visit_date VARCHAR NOT NULL
+                visit_date DATE NOT NULL
                 )
             """)
             conn.execute("""
