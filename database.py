@@ -59,7 +59,7 @@ class Database:
 
     def get_meals_by_price(self):
         with sqlite3.connect(self.path) as conn:
-            conn.row_factory = sqlite3.Row  # Устанавливаем row_factory для подключения
+            conn.row_factory = sqlite3.Row
             result = conn.execute("""
             SELECT * FROM meals
             ORDER BY price ASC;
